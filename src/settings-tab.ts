@@ -74,7 +74,11 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     enabledWebsites: ResetEnabledWebsites(),
 
-    mastodonInstances: [],
+    mastodonInstances: [
+        "mastodon.social",
+        "fosstodon.org",
+        "mstdn.io"
+    ],
 
     googleDocsViewOption: GoogleDocsViewOptions.Preview,
 
