@@ -34,8 +34,13 @@ export class MastodonEmbed extends EmbedBase {
         /*
         Only allow instances specified by the user
         */
-        if (!this.plugin.settings.mastodonInstances.includes(instance))
-            return this.onErrorCreatingEmbed(url);
+		const allowed = this.plugin.settings.mastodonInstances.some(i =>
+    		instance === i || instance.endsWith("." + i)
+		);
+
+		if (!allowed)
+  	  		return this.onErrorCreatingEmbed(url);
+
 
         const iframe = createEl("iframe");
 
