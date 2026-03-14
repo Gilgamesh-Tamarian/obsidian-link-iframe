@@ -12,7 +12,8 @@ export class MastodonEmbed extends EmbedBase {
     https://mastodon.social/@user/109382938239
     https://fosstodon.org/@someone/111234234
     */
-    regex = new RegExp(/https:\/\/([^\/]+)\/@([\w\d_]+)\/(\d+)/);
+	regex = new RegExp(/https:\/\/([^\/]+)\/@([A-Za-z0-9_.-]+)\/(\d+)/);
+
 
     /*
     Mastodon instances vary so we cannot use a single embed origin.
