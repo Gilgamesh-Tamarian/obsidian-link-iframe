@@ -17,6 +17,10 @@ Things to remember:
 - Add & remove all features, improvements, bugs
 - Try to check all the links link to a valid location
 -->
+## [1.2.7](https://github.com/Gilgamesh-Tamarian/obsidian-auto-embed-plus/tree/1.2.7) (2026-03-14)
+
+**New Features:**
+- Support for Mastodon
 
 ## [1.2.6](https://github.com/GnoxNahte/obsidian-auto-embed/tree/1.2.6) (2024-12-24)
 
