@@ -291,7 +291,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Mastodon Default Embed Height")
-            .setDesc("Set the default height (in px) for Mastodon embeds. Default: 750.\n\nA larger default height is necessary to correctly render longer posts, but will result in excessive space for smaller posts. You can manually adjust the height for individual embeds if needed.")
+            .setDesc("Set the default height (in px) for Mastodon embeds. Standard Default: 750.\n\nA larger default height is necessary to correctly render longer posts, but will result in excessive space for smaller posts. You can manually adjust the height for individual embeds if needed.")
             .addText(text => {
                 text.setValue(settings.mastodonDefaultHeight)
                     .onChange(async value => {
