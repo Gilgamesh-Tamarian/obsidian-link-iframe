@@ -331,3 +331,9 @@ iframe.default-fallback-embed {
     /* height: calc(210px + 80vw); */
     /* aspect-ratio: 1; */
 }
+
+/* Mastodon embed flexible height */
+.mastodon-embed {
+    height: auto;
+    width: 100%;
+}

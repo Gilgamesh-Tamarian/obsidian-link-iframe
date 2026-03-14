@@ -6,13 +6,15 @@ export class MastodonEmbed extends EmbedBase {
     name: SupportedWebsites = "Mastodon";
 
     /*
-    Generic Mastodon URL pattern.
-
+    Improved Mastodon URL pattern.
     Examples:
     https://mastodon.social/@user/109382938239
     https://fosstodon.org/@someone/111234234
+    https://mastodon.social/users/user/statuses/109382938239
     */
-	regex = new RegExp(/https:\/\/([^\/]+)\/@([A-Za-z0-9_.-]+)\/(\d+)/);
+    regex = new RegExp(
+        /https:\/\/([^\/]+)\/(?:@([A-Za-z0-9_.-]+)\/(\d+)|users\/([A-Za-z0-9_.-]+)\/statuses\/(\d+))/
+    );
 
 
     /*
@@ -24,29 +26,40 @@ export class MastodonEmbed extends EmbedBase {
     createEmbed(url: string): HTMLElement {
 
         const regexMatch = url.match(this.regex);
-
         if (regexMatch === null)
             return this.onErrorCreatingEmbed(url);
 
         const instance = regexMatch[1];
-        const username = regexMatch[2];
-        const postId = regexMatch[3];
+        // Support both @username/postId and users/username/statuses/postId
+        const username = regexMatch[2] || regexMatch[4];
+        const postId = regexMatch[3] || regexMatch[5];
+
+        // Validate extracted values
+        if (!instance || !username || !postId)
+            return this.onErrorCreatingEmbed(url, "Invalid Mastodon link format.");
 
         /*
-        Only allow instances specified by the user
+        Allow instances specified by the user or always-allowed instances
         */
-		const allowed = this.plugin.settings.mastodonInstances.some(i =>
-    		instance === i || instance.endsWith("." + i)
-		);
+        const alwaysAllowedInstances = [
+            "mastodon.social",
+            "social.vivaldi.net"
+        ];
+        const allowed =
+            this.plugin.settings.mastodonInstances.some(i =>
+                instance === i || instance.endsWith("." + i)
+            ) ||
+            alwaysAllowedInstances.some(i =>
+                instance === i || instance.endsWith("." + i)
+            );
 
-		if (!allowed)
-  	  		return this.onErrorCreatingEmbed(url);
+        if (!allowed)
+            return this.onErrorCreatingEmbed(url);
 
 
         const iframe = createEl("iframe");
 
-        const embedUrl =
-            `https://${instance}/@${username}/${postId}/embed`;
+        const embedUrl = `https://${instance}/@${username}/${postId}/embed`;
 
         iframe.src = embedUrl;
 
@@ -56,6 +69,7 @@ export class MastodonEmbed extends EmbedBase {
         iframe.dataset.mastodonInstance = instance;
         iframe.dataset.mastodonPostId = postId;
 
+        // Restore sandbox for security and compatibility
         iframe.sandbox.add(
             "allow-forms",
             "allow-presentation",
@@ -65,22 +79,25 @@ export class MastodonEmbed extends EmbedBase {
             "allow-popups"
         );
 
-        iframe.setAttribute("scrolling", "no");
+        // Allow scrolling
+        iframe.setAttribute("scrolling", "auto");
+        iframe.style.overflow = "auto";
 
         iframe.style.width = "100%";
         iframe.style.border = "0";
 
-        /*
-        Default height before resize message
-        */
-        iframe.style.height = "500px";
+        // Set default height for Mastodon embeds from user settings
+        const defaultHeight = this.plugin.settings.mastodonDefaultHeight || "750";
+        iframe.style.height = defaultHeight.endsWith("px") ? defaultHeight : `${defaultHeight}px`;
 
-        /*
-        Restore cached size if known
-        */
+        // Restore cached size if known
         if (this.sizeCache[postId] && this.sizeCache[postId].height) {
             iframe.style.height = this.sizeCache[postId].height + "px";
         }
+
+        // Add allowfullscreen and allowtransparency
+        iframe.setAttribute("allowfullscreen", "true");
+        iframe.setAttribute("allowtransparency", "true");
 
         return iframe;
     }
@@ -110,15 +127,14 @@ export class MastodonEmbed extends EmbedBase {
             return;
 
         for (let i = 0; i < iframes.length; ++i) {
-
             const iframe = iframes[i] as HTMLIFrameElement;
-
             iframe.style.height = height + "px";
-
+            // Also resize the container to match the iframe height
             this.resizeContainer(iframe, iframe.style.height);
-
+            if (iframe.parentElement) {
+                iframe.parentElement.style.height = iframe.style.height;
+            }
             const postId = iframe.dataset.mastodonPostId;
-
             if (postId)
                 this.sizeCache[postId] = {
                     width: 0,

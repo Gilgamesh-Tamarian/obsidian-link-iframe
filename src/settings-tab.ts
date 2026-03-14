@@ -51,6 +51,8 @@ export interface PluginSettings {
 
     // Mastodon instances
     mastodonInstances: string[];
+    // Mastodon default embed height
+    mastodonDefaultHeight: string;
 
     // Google Docs
     googleDocsViewOption: GoogleDocsViewOptions;
@@ -74,11 +76,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     enabledWebsites: ResetEnabledWebsites(),
 
-    mastodonInstances: [
-        "mastodon.social",
-        "fosstodon.org",
-        "mstdn.io"
-    ],
+    mastodonInstances: [],
+    mastodonDefaultHeight: "1000",
 
     googleDocsViewOption: GoogleDocsViewOptions.Preview,
 
@@ -263,7 +262,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Mastodon Instances")
             .setHeading()
-            .setDesc("Enter Mastodon servers that should be recognized as Mastodon embeds (one per line).");
+            .setDesc("Enter Mastodon servers that should be recognized as Mastodon embeds (one per line).\n\nNote: mastodon.social is always allowed regardless of settings");
 
         new Setting(containerEl)
             .setName("Allowed Mastodon servers")
@@ -271,7 +270,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
                 text
                     .setPlaceholder(
-                        "mastodon.social\nfosstodon.org\nhachyderm.io"
+                        "e.g. social.vivaldi.net\nlgbtqia.space\npiaille.fr"
                     )
                     .setValue(settings.mastodonInstances.join("\n"))
                     .onChange(async value => {
@@ -288,6 +287,17 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
                 text.inputEl.rows = 6;
 
+            });
+
+        new Setting(containerEl)
+            .setName("Mastodon Default Embed Height")
+            .setDesc("Set the default height (in px) for Mastodon embeds. Default: 750.\n\nA larger default height is necessary to correctly render longer posts, but will result in excessive space for smaller posts. You can manually adjust the height for individual embeds if needed.")
+            .addText(text => {
+                text.setValue(settings.mastodonDefaultHeight)
+                    .onChange(async value => {
+                        settings.mastodonDefaultHeight = value;
+                        await plugin.saveSettings();
+                    });
             });
 
         const additionalInfo = new DocumentFragment();
