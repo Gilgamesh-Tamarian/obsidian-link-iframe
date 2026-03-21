@@ -275,7 +275,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
                 text
                     .setPlaceholder(
-                        "E.g. social.vivaldi.net\nlgbtqia.space\npiaille.fr"
+                        "E.g. social.vivaldi.net\nLgbtqia.space\nPiaille.fr"
                     )
                     .setValue(settings.mastodonInstances.join("\n"))
                     .onChange(async value => {
