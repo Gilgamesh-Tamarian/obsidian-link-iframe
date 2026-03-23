@@ -17,9 +17,8 @@ export class PreviewEmbedModal extends Modal {
     async createEmbed(contentEl: HTMLElement): Promise<HTMLElement> {
         const markup = await this.plugin.generateEmbedMarkup(this.url, this.options);
 
-        const fragment = document.createElement("template");
-        fragment.innerHTML = markup.trim();
-        const rootEl = fragment.content.firstElementChild as HTMLElement | null;
+        const doc = new DOMParser().parseFromString(markup.trim(), "text/html");
+        const rootEl = doc.body.firstElementChild as HTMLElement | null;
         if (!rootEl) {
             throw new Error("Could not generate embed preview");
         }

@@ -1,5 +1,3 @@
-
-// eslint-disable-next-line @typescript-eslint/no-namespace -- Type process.versions.electron for runtime Electron capability checks.
 declare namespace process {
     let versions: {
         electron: `${number}/${number}/${number}`;

@@ -71,7 +71,7 @@ export function createAspectRatioInput(
 
 		validationMessage.setText("");
 		ratioInput.setValue("custom");
-		onAspectRatioUpdate(normalized as `${number}/${number}`);
+		onAspectRatioUpdate(normalized);
 	});
 
 	return aspectRatioInputContainer;

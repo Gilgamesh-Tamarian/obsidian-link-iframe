@@ -8,40 +8,37 @@ export enum PreloadOptions {
     Placeholder_ClickToLoad,
 }
 
-export const supportedWebsites = [
-    "Twitter/X",
-    "Imgur",
-    "Reddit",
-    "CodePen",
-    "Google Docs",
-    "Google Drive",
-    "Google Calendar",
-    "Google Maps",
-    "Wikipedia",
-    "Geogebra",
-    "Quizlet",
-    "OpenStreetMap",
-    "SoundCloud",
-    "Spotify",
-    "Apple Music",
-    "Tidal",
-    "Deezer",
-    "Steam",
-    "YouTube",
-    "Vimeo",
-    "Dailymotion",
-    "VK Video",
-    "Twitch",
-    "TikTok",
-    "Instagram",
-    "Facebook",
-    "Pinterest",
-    "Telegram",
-    "Mastodon",
-    "Threads",
-] as const;
-
-export type SupportedWebsites = (typeof supportedWebsites)[number];
+export type SupportedWebsites =
+    | "Twitter/X"
+    | "Imgur"
+    | "Reddit"
+    | "CodePen"
+    | "Google Docs"
+    | "Google Drive"
+    | "Google Calendar"
+    | "Google Maps"
+    | "Wikipedia"
+    | "Geogebra"
+    | "Quizlet"
+    | "OpenStreetMap"
+    | "SoundCloud"
+    | "Spotify"
+    | "Apple Music"
+    | "Tidal"
+    | "Deezer"
+    | "Steam"
+    | "YouTube"
+    | "Vimeo"
+    | "Dailymotion"
+    | "VK Video"
+    | "Twitch"
+    | "TikTok"
+    | "Instagram"
+    | "Facebook"
+    | "Pinterest"
+    | "Telegram"
+    | "Mastodon"
+    | "Threads";
 
 export interface PluginSettings {
 
@@ -196,7 +193,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Show original link under embed")
-            .setDesc("Display an \"Open original link\" footer below generated embeds")
+            .setDesc("Display an \"open original link\" footer below generated embeds")
             .addToggle(toggle => toggle
                 .setValue(settings.showOriginalLink)
                 .onChange(async value => {
@@ -224,7 +221,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Save social media images to vault")
-            .setDesc("For supported platforms (Instagram, Facebook, Pinterest, Telegram, Mastodon, Reddit, TikTok, Imgur, SoundCloud, Spotify, CodePen, Steam), fetch available media images and save them locally")
+            .setDesc("For supported platforms (instagram, facebook, pinterest, Telegram, mastodon, Reddit, TikTok, imgur, SoundCloud, spotify, CodePen, steam), fetch available media images and save them locally")
             .addToggle(toggle => toggle
                 .setValue(settings.saveSocialMediaImagesToVault)
                 .onChange(async value => {
@@ -235,8 +232,8 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
-            .setName("Save Google Docs to vault")
-            .setDesc("Download a local Markdown copy of the document when embedding a Google Doc (requires the document to be shared with anyone with the link)")
+            .setName("Save google docs to vault")
+            .setDesc("Download a local Markdown copy of the document when embedding a google doc (requires the document to be shared with anyone with the link)")
             .addToggle(toggle => toggle
                 .setValue(settings.saveGoogleDocsToVault)
                 .onChange(async value => {
@@ -250,7 +247,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
             .setName("Image folder path")
             .setDesc("Folder inside your vault used for downloaded image content")
             .addText(text => text
-                .setPlaceholder("linked-iframe-images")
+                .setPlaceholder("Linked-iframe-images")
                 .setValue(settings.imageFolderPath)
                 .onChange(async value => {
 
@@ -260,10 +257,10 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
-            .setName("Google Docs folder path")
-            .setDesc("Folder inside your vault used for downloaded Google Docs Markdown files")
+            .setName("Google docs folder path")
+            .setDesc("Folder inside your vault used for downloaded google docs Markdown files")
             .addText(text => text
-                .setPlaceholder("linked-iframe-docs")
+                .setPlaceholder("Linked-iframe-docs")
                 .setValue(settings.googleDocsFolderPath)
                 .onChange(async value => {
 
@@ -295,7 +292,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
         quizletSaveDescription.appendText(" this setting has general plugin performance implications, and will especially cause stutter when embedding larger Quizlet sets.");
 
         new Setting(quizletContent)
-            .setName("Save Quizlet cards to vault")
+            .setName("Save quizlet cards to vault")
             .setDesc(quizletSaveDescription)
             .addToggle(toggle => toggle
                 .setValue(settings.saveQuizletCardsToVault)
@@ -308,7 +305,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(quizletContent)
             .setName("Quizlet: save card images to vault")
-            .setDesc("When enabled, download card images found in Quizlet sets and embed them locally in exported notes")
+            .setDesc("When enabled, download card images found in quizlet sets and embed them locally in exported notes")
             .addToggle(toggle => toggle
                 .setValue(settings.saveQuizletImagesToVault)
                 .onChange(async value => {
@@ -332,9 +329,9 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(quizletContent)
             .setName("Quizlet folder path")
-            .setDesc("Folder inside your vault used for downloaded Quizlet card exports")
+            .setDesc("Folder inside your vault used for downloaded quizlet card exports")
             .addText(text => text
-                .setPlaceholder("linked-iframe-quizlet")
+                .setPlaceholder("Linked-iframe-quizlet")
                 .setValue(settings.quizletFolderPath)
                 .onChange(async value => {
 
@@ -344,13 +341,13 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(quizletContent)
-            .setName("Update all saved Quizlet cards")
-            .setDesc("Primary action: refresh every Quizlet set that has a stored quizlet:source marker in your vault.")
+            .setName("Update all saved quizlet cards")
+            .setDesc("Primary action: refresh every quizlet set that has a stored quizlet:source marker in your vault.")
             .addButton(button => {
                 let isUpdating = false;
 
                 button
-                    .setButtonText("Update all Quizlet cards")
+                    .setButtonText("Update all quizlet cards")
                     .setCta()
                     .onClick(async () => {
                         if (isUpdating) {
@@ -360,7 +357,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                         isUpdating = true;
                         button.setDisabled(true);
                         button.setButtonText("Updating...");
-                        new Notice("I link therefore iframe: updating all saved Quizlet cards...");
+                        new Notice("I link therefore iframe: updating all saved quizlet cards...");
 
                         try {
                             const result = await plugin.updateAllSavedQuizletCards();
@@ -371,11 +368,11 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                                 12000,
                             );
                         } catch {
-                            new Notice("I link therefore iframe: failed to update all saved Quizlet cards.");
+                            new Notice("I link therefore iframe: failed to update all saved quizlet cards.");
                         } finally {
                             isUpdating = false;
                             button.setDisabled(false);
-                            button.setButtonText("Update all Quizlet cards");
+                            button.setButtonText("Update all quizlet cards");
                         }
                     });
             });

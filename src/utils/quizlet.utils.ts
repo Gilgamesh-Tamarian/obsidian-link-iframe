@@ -453,7 +453,7 @@ function parseQuizletCardsFromNextData(html: string): QuizletCard[] {
         const record = obj as Record<string, unknown>;
         if (typeof record.dehydratedReduxStateKey === "string") {
             try {
-                const inner: unknown = JSON.parse(JSON.parse(record.dehydratedReduxStateKey as string));
+                const inner: unknown = JSON.parse(JSON.parse(record.dehydratedReduxStateKey));
                 const items = extractStudiableItems(inner);
                 if (items && items.length > 0) return items;
             } catch { /* continue */ }
@@ -794,7 +794,7 @@ export async function saveQuizletSetToVault(
     try {
         let cards = await tryQuizletRestApi(setId, fetchHeaders);
         if (debug && cards.length > 0) {
-            console.log(`[I link therefore iframe] Quizlet REST API returned ${cards.length} cards for set:`, setId);
+            console.debug(`[I link therefore iframe] Quizlet REST API returned ${cards.length} cards for set:`, setId);
         }
 
         let html: string | null = null;
@@ -822,7 +822,7 @@ export async function saveQuizletSetToVault(
 
         if (cards.length === 0) {
             if (debug) {
-                console.log("[I link therefore iframe] Could not find exportable Quizlet cards with any method for set:", setId);
+                console.debug("[I link therefore iframe] Could not find exportable Quizlet cards with any method for set:", setId);
             }
             return { status: html ? "no-cards" : "not-html" };
         }
@@ -847,7 +847,7 @@ export async function saveQuizletSetToVault(
             );
 
             if (debug) {
-                console.log("[I link therefore iframe] Quizlet single-file export completed:", {
+                console.debug("[I link therefore iframe] Quizlet single-file export completed:", {
                     setId,
                     filePath: singleFileResult.filePath,
                     status: singleFileResult.status,
@@ -929,7 +929,7 @@ export async function saveQuizletSetToVault(
         }
 
         if (debug) {
-            console.log("[I link therefore iframe] Quizlet card export completed:", {
+            console.debug("[I link therefore iframe] Quizlet card export completed:", {
                 setId,
                 setFolderPath,
                 createdCount,

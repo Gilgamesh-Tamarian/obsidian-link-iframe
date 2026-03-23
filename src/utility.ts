@@ -218,7 +218,7 @@ export async function saveImageUrlToVault(
         if (!existingFile) {
             await vault.createBinary(filePath, getResponse.arrayBuffer);
             if (debug) {
-                console.log("[I link therefore iframe] Saved image to vault:", filePath);
+                console.debug("[I link therefore iframe] Saved image to vault:", filePath);
             }
         }
 
@@ -753,7 +753,7 @@ export async function resolveAllSocialMediaImageUrls(
             // If the response is HTML the document is private or inaccessible.
             if (contentType.startsWith("text/html")) {
                 if (debug) {
-                    console.log("[I link therefore iframe] Google Doc is not publicly accessible, skipping download:", url);
+                    console.debug("[I link therefore iframe] Google Doc is not publicly accessible, skipping download:", url);
                 }
                 return;
             }
@@ -773,7 +773,7 @@ export async function resolveAllSocialMediaImageUrls(
             if (!vault.getAbstractFileByPath(filePath)) {
                 await vault.create(filePath, content);
                 if (debug) {
-                    console.log("[I link therefore iframe] Saved Google Doc to vault:", filePath);
+                    console.debug("[I link therefore iframe] Saved Google Doc to vault:", filePath);
                 }
             }
         } catch (error) {

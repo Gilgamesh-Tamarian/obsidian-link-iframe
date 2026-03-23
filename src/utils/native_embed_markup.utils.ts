@@ -167,16 +167,15 @@ function copyOptionalIframeAttribute(target: HTMLIFrameElement, source: HTMLIFra
 }
 
 export function buildNativeEmbedMarkup(rawMarkup: string, originalUrl: string, showOriginalLink = true): string {
-    const fragment = document.createElement("template");
-    fragment.innerHTML = rawMarkup.trim();
+    const doc = new DOMParser().parseFromString(rawMarkup.trim(), "text/html");
 
-    const root = fragment.content.firstElementChild as HTMLElement | null;
+    const root = doc.body.firstElementChild as HTMLElement | null;
     if (!root)
         return rawMarkup;
 
     const sourceIframe = root instanceof HTMLIFrameElement
         ? root
-        : (root.querySelector("iframe") as HTMLIFrameElement | null);
+        : root.querySelector("iframe");
 
     if (!sourceIframe)
         return rawMarkup;

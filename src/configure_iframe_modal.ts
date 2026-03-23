@@ -1,13 +1,11 @@
-import { App, Editor, Modal } from "obsidian";
+import { App, Editor, Modal, sanitizeHTMLToDom } from "obsidian";
 import { createAspectRatioInput } from "./components/aspect_ratio_input";
 import { createIframeContainerEl, createIframeContainerElLegacy } from "./components/resizable_iframe_container";
 import { doesSupportAspectRatio } from "./constant";
 
 function hasIframeMarkup(markup: string): boolean {
-const fragment = document.createElement("template");
-fragment.innerHTML = markup.trim();
-
-const rootEl = fragment.content.firstElementChild as HTMLElement | null;
+const doc = new DOMParser().parseFromString(markup.trim(), "text/html");
+const rootEl = doc.body.firstElementChild;
 if (!rootEl)
 return false;
 
@@ -17,7 +15,7 @@ return rootEl instanceof HTMLIFrameElement || !!rootEl.querySelector("iframe");
 function createGenericEmbedPreview(contentEl: HTMLElement, embedHtml: string) {
 const previewContainer = contentEl.createEl("div");
 previewContainer.className = "iframe__container space-y";
-previewContainer.innerHTML = embedHtml.trim();
+previewContainer.appendChild(sanitizeHTMLToDom(embedHtml.trim()));
 
 return {
 previewEl: previewContainer,
@@ -46,14 +44,20 @@ const container = contentEl.createEl("div");
 container.className = "iframe__modal__container";
 
 const subTitle = contentEl.createEl("div");
-const outdatedObsidianWarning = doesSupportAspectRatio ? "" : "</br><strong>For the best experience, please re-download Obsidian to get the latest Electron version</strong>.";
 const isIframeEmbed = hasIframeMarkup(this.iframeHtml);
 
 let previewEl: HTMLElement;
 let outputHtml: () => string;
 
 if (isIframeEmbed) {
-subTitle.innerHTML = "To choose the size, drag the <strong>bottom right</strong> (the preview won't respect the note width)." + outdatedObsidianWarning;
+subTitle.appendText("To choose the size, drag the ");
+subTitle.createEl("strong", { text: "Bottom right" });
+subTitle.appendText(" (the preview won't respect the note width).");
+if (!doesSupportAspectRatio) {
+subTitle.createEl("br");
+subTitle.createEl("strong", { text: "For the best experience, please re-download Obsidian to get the latest electron version" });
+subTitle.appendText(".");
+}
 
 // Electron < 12 doesn't support the aspect ratio. We need to use a fancy div container with a padding bottom
 const { iframeContainer, outputHtml: buildHtml, resetToDefaultWidth, updateAspectRatio } = doesSupportAspectRatio ?
@@ -67,7 +71,7 @@ outputHtml = buildHtml;
 container.appendChild(aspectRatioInput);
 container.appendChild(widthCheckbox);
 } else {
-subTitle.innerHTML = "This provider uses native markup instead of an iframe, so there are no iframe sizing controls for this preview.";
+subTitle.textContent = "This provider uses native markup instead of an iframe, so there are no iframe sizing controls for this preview.";
 
 const genericPreview = createGenericEmbedPreview(contentEl, this.iframeHtml);
 previewEl = genericPreview.previewEl;

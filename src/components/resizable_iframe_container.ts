@@ -18,17 +18,16 @@ export function createIframeContainerEl(contentEl: HTMLElement, iframeHtml: stri
 	iframeContainer.className = "iframe__container space-y"
 
 	// Inline styling to make sure that the created iframe will keep the style even without the plugin
-	const fragment = document.createElement('template');
-	fragment.innerHTML = iframeHtml.trim();
+	const doc = new DOMParser().parseFromString(iframeHtml.trim(), "text/html");
 
-	const rootEl = fragment.content.firstElementChild as HTMLElement | null;
+	const rootEl = doc.body.firstElementChild as HTMLElement | null;
 	if (!rootEl) {
 		throw new Error('Embed markup does not contain a root element');
 	}
 
 	const iframe = rootEl instanceof HTMLIFrameElement
 		? rootEl
-		: (rootEl.querySelector('iframe') as HTMLIFrameElement | null);
+		: rootEl.querySelector('iframe');
 
 	if (!iframe) {
 		throw new Error('Embed markup does not contain an iframe');
@@ -134,9 +133,8 @@ export function createIframeContainerEl(contentEl: HTMLElement, iframeHtml: stri
 
 	const iframe = ratioContainer.createEl('iframe');
 
-	const fragment = document.createElement('template');
-	fragment.innerHTML = iframeHtml.trim();
-	const sourceIframe = fragment.content.querySelector('iframe');
+	const doc = new DOMParser().parseFromString(iframeHtml.trim(), "text/html");
+	const sourceIframe = doc.querySelector('iframe');
 	const sourceUrl = sourceIframe?.getAttribute("src") ?? "about:blank";
 	const autoAspectRatio = getAutoAspectRatioForUrl(sourceUrl);
 	iframe.src = sourceIframe?.getAttribute('src') ?? 'about:blank';

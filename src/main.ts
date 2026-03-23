@@ -211,7 +211,7 @@ export default class AutoEmbedPlugin extends Plugin {
 					));
 
 					if (this.settings.debug) {
-						console.log("[I link therefore iframe] Saved social media images and kept embed URL:", originalUrl);
+						console.debug("[I link therefore iframe] Saved social media images and kept embed URL:", originalUrl);
 					}
 				} else {
 					embedUrl = await saveImageUrlToVault(
@@ -258,11 +258,11 @@ export default class AutoEmbedPlugin extends Plugin {
 				} else if (quizletExportResult.status === "unchanged") {
 					new Notice(`[I link therefore iframe] Quizlet cards unchanged (${quizletExportResult.unchangedCount ?? quizletExportResult.cardCount ?? 0})`);
 				} else if (quizletExportResult.status === "no-cards") {
-					new Notice("[I link therefore iframe] Quizlet export failed: no card data found on page");
+					new Notice("[i link therefore iframe] quizlet export failed: no card data found on page");
 				} else if (quizletExportResult.status === "not-html") {
-					new Notice("[I link therefore iframe] Quizlet export skipped: URL did not return HTML");
+					new Notice("[i link therefore iframe] quizlet export skipped: URL did not return HTML");
 				} else if (quizletExportResult.status === "error") {
-					new Notice("[I link therefore iframe] Quizlet export failed due to request or parsing error");
+					new Notice("[i link therefore iframe] quizlet export failed due to request or parsing error");
 				}
 			}
 		}

@@ -174,7 +174,7 @@ export abstract class EmbedBase {
         
         const iframe = embed instanceof HTMLIFrameElement
             ? embed
-            : (embed.querySelector(':scope > iframe') as HTMLIFrameElement | null);
+            : embed.querySelector<HTMLIFrameElement>(':scope > iframe');
 
         // Add placeholder
         let placeholder: HTMLDivElement | undefined;
