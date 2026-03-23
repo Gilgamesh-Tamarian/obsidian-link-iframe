@@ -305,6 +305,163 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                     });
             });
 
+        /*
+        Google Docs settings
+        */
+
+        new Setting(containerEl)
+            .setName("Google Docs")
+            .setHeading()
+            .setDesc("Settings for Google Docs embeds");
+
+        const googleDocsViewOptions = EnumToRecord(GoogleDocsViewOptions);
+
+        const googleDocsViewSetting =
+            new Setting(containerEl)
+                .setName("View option")
+                .setDesc("Choose how Google Docs are displayed")
+                .addDropdown(dropdown => dropdown
+                    .addOptions(googleDocsViewOptions)
+                    .setValue(GoogleDocsViewOptions[settings.googleDocsViewOption])
+                    .onChange(async value => {
+
+                        settings.googleDocsViewOption =
+                            GoogleDocsViewOptions[value as keyof typeof GoogleDocsViewOptions];
+
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(googleDocsViewSetting, true);
+
+        /*
+        Fallback settings
+        */
+
+        new Setting(containerEl)
+            .setName("Fallback")
+            .setHeading()
+            .setDesc("Settings for unsupported / unrecognized links");
+
+        const fallbackOptionValues = EnumToRecord(FallbackOptions);
+
+        const fallbackOptionSetting =
+            new Setting(containerEl)
+                .setName("Fallback option")
+                .setDesc("Choose how unsupported links are handled")
+                .addDropdown(dropdown => dropdown
+                    .addOptions(fallbackOptionValues)
+                    .setValue(FallbackOptions[settings.fallbackOptions])
+                    .onChange(async value => {
+
+                        settings.fallbackOptions =
+                            FallbackOptions[value as keyof typeof FallbackOptions];
+
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(fallbackOptionSetting);
+
+        const fallbackWidthSetting =
+            new Setting(containerEl)
+                .setName("Fallback width")
+                .setDesc("Default width for fallback embeds (CSS value, e.g. 100%)")
+                .addText(text => text
+                    .setPlaceholder("100%")
+                    .setValue(settings.fallbackWidth)
+                    .onChange(async value => {
+
+                        settings.fallbackWidth = value;
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(fallbackWidthSetting);
+
+        const fallbackHeightSetting =
+            new Setting(containerEl)
+                .setName("Fallback height")
+                .setDesc("Default height for fallback embeds (CSS value, e.g. 500px)")
+                .addText(text => text
+                    .setPlaceholder("500px")
+                    .setValue(settings.fallbackHeight)
+                    .onChange(async value => {
+
+                        settings.fallbackHeight = value;
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(fallbackHeightSetting);
+
+        const fallbackDefaultLinkSetting =
+            new Setting(containerEl)
+                .setName("Default link text")
+                .setDesc("Text to display for the link below a fallback embed when auto title is disabled")
+                .addText(text => text
+                    .setPlaceholder("Link")
+                    .setValue(settings.fallbackDefaultLink)
+                    .onChange(async value => {
+
+                        settings.fallbackDefaultLink = value;
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(fallbackDefaultLinkSetting);
+
+        const fallbackAutoTitleSetting =
+            new Setting(containerEl)
+                .setName("Auto title")
+                .setDesc("Automatically fetch and display the page title as the link text below fallback embeds")
+                .addToggle(toggle => toggle
+                    .setValue(settings.fallbackAutoTitle)
+                    .onChange(async value => {
+
+                        settings.fallbackAutoTitle = value;
+                        await plugin.saveSettings();
+
+                    }));
+
+        AddPadding(fallbackAutoTitleSetting, true);
+
+        /*
+        Advanced settings
+        */
+
+        new Setting(containerEl)
+            .setName("Advanced")
+            .setHeading()
+            .addToggle(toggle => toggle
+                .setValue(settings.showAdvancedSettings)
+                .onChange(async value => {
+
+                    settings.showAdvancedSettings = value;
+                    await plugin.saveSettings();
+                    this.display();
+
+                }));
+
+        if (settings.showAdvancedSettings) {
+
+            const debugSetting =
+                new Setting(containerEl)
+                    .setName("Debug mode")
+                    .setDesc("Log additional information to the console for troubleshooting")
+                    .addToggle(toggle => toggle
+                        .setValue(settings.debug)
+                        .onChange(async value => {
+
+                            settings.debug = value;
+                            await plugin.saveSettings();
+
+                        }));
+
+            AddPadding(debugSetting, true);
+
+        }
+
         const additionalInfo = new DocumentFragment();
 
         additionalInfo.appendText("All values use ");
