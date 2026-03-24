@@ -209,7 +209,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Save image embeds to vault")
-            .setDesc("Download direct image URLs and replace embed links with local vault files")
+            .setDesc("Download direct image urls and replace embed links with local vault files")
             .addToggle(toggle => toggle
                 .setValue(settings.saveImagesToVault)
                 .onChange(async value => {
@@ -221,7 +221,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Save social media images to vault")
-            .setDesc("For supported platforms (instagram, facebook, pinterest, Telegram, mastodon, Reddit, TikTok, imgur, SoundCloud, spotify, CodePen, steam), fetch available media images and save them locally")
+            .setDesc("For supported platforms, fetch available media images and save them locally")
             .addToggle(toggle => toggle
                 .setValue(settings.saveSocialMediaImagesToVault)
                 .onChange(async value => {
