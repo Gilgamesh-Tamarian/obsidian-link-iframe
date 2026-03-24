@@ -1,5 +1,5 @@
 import { hasProvider, extract, VideoTypeData} from 'oembed-parser'
-import * as DOMPurify from 'dompurify'
+import DOMPurify from 'dompurify'
 
 
 export interface IframeFallbackOptions {

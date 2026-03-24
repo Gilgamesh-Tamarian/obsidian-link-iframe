@@ -102,9 +102,9 @@ For URLs that do not match any known provider, the plugin falls back to a generi
 
 | Provider | Notes |
 |---|---|
-| [Google Docs](https://docs.google.com/) | Documents shared with "anyone with the link" |
-| [Google Drive](https://drive.google.com/) | File share links (`/file/d/...` and `?id=...`) converted to `/preview` |
-| [Google Calendar](https://calendar.google.com/) | Extracts calendar ID from `src` or `cid` query parameter |
+| [Google Docs](https://docs.google.com/)* | Docs, Slides, and Spreadsheets links (`/document/...`, `/presentation/...`, and `/spreadsheets/...`) |
+| [Google Drive](https://drive.google.com/)* | File share links (`/file/d/...` and `?id=...`) converted to `/preview` |
+| [Google Calendar](https://calendar.google.com/)* | Extracts calendar ID from `src` or `cid` query parameter |
 | [Google Maps](https://maps.google.com/) | Query links, place links, coordinate links, short `maps.app.goo.gl` links |
 
 ### Other
@@ -114,12 +114,15 @@ For URLs that do not match any known provider, the plugin falls back to a generi
 | [Imgur](https://imgur.com/) | Single images and albums; auto-resizes via postMessage |
 | [CodePen](https://codepen.io/) | |
 | [Steam](https://store.steampowered.com/) | Store pages |
-| [Quizlet](https://quizlet.com/) | Flashcard embed; full vault export available (see [below](#quizlet-vault-export)) |
+| [Quizlet](https://quizlet.com/)* | Flashcard embed; full vault export available (see [below](#quizlet-vault-export)) |
 | [Wikipedia](https://www.wikipedia.org/) | Any language subdomain |
 | [Geogebra](https://www.geogebra.org/) | Material iframes |
 | [OpenStreetMap](https://www.openstreetmap.org/) | Marker + bounding-box embed |
 
 For any URL that does not match a known provider, the plugin attempts a generic oEmbed lookup and falls back to a full-page iframe.
+
+> [!NOTE]
+> *Since you cannot authenticate in an iframe, the contents of the link must be available publicly or to anyone with the link.
 
 ---
 
@@ -196,12 +199,21 @@ Platforms supported for social media image extraction:
 
 ### Save Google Docs to vault
 
-When **Save Google Docs to vault** is enabled, embedding a Google Docs URL also downloads a Markdown copy of the document into your vault.
+When **Save Google Docs to vault** is enabled:
+
+- Google Docs URLs are exported as Markdown (`.md`) files.
+- Google Slides URLs are exported as PDF (`.pdf`) or PPTX (`.pptx`) files, depending on your setting.
+- Google Spreadsheets URLs are exported as PDF (`.pdf`) or XLSX (`.xlsx`) files, depending on your setting.
+
+Refresh behavior and limitations:
+
+- **Refresh saved Google Docs** only refreshes Google Docs notes that contain the `google-docs-source` frontmatter property.
+- Slides and Spreadsheets exports do not have a bulk refresh mechanism in this version.
 
 > [!IMPORTANT]
-> The document must be shared with *Anyone with the link* for the export to succeed.
+> Google Docs/Slides/Spreadsheets exports only work if the file is shared with *Anyone with the link*.
 
-**Google Docs folder path** (default: `linked-iframe-docs`) — vault folder for exported Markdown files.
+**Google Docs folder path** (default: `linked-iframe-docs`) — vault folder for exported Google Docs (`.md`) plus Google Slides/Spreadsheets exports (`.pdf`, `.pptx`, `.xlsx`).
 
 ---
 
@@ -293,6 +305,12 @@ The **Update all saved Quizlet cards** button in settings scans your entire vaul
 **Quizlet** — Card data is only accessible for public sets. Private or password-protected sets cannot be exported.
 
 **Google Docs** — The Markdown vault export only works if the document is shared with *Anyone with the link*.
+
+**Google Slides** — Vault export (PDF/PPTX) only works if the presentation is shared with *Anyone with the link*.
+
+**Google Spreadsheets** — Vault export (PDF/XLSX) only works if the spreadsheet is shared with *Anyone with the link*.
+
+**Google Workspace refresh scope** — The **Refresh saved Google Docs** action only applies to Google Docs notes with `google-docs-source` frontmatter. It does not refresh Slides or Spreadsheets exports.
 
 ---
 

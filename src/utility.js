@@ -38,7 +38,11 @@ const SOUNDCLOUD_URL_REGEX = /^https:\/\/(?:www\.)?soundcloud\.com\//i;
 const SPOTIFY_URL_REGEX = /^https:\/\/(?:open|play|www)\.spotify\.com\//i;
 const CODEPEN_URL_REGEX = /^https:\/\/codepen\.io\//i;
 const STEAM_APP_URL_REGEX = /store\.steampowered\.com\/app\/(\d+)/i;
-const GOOGLE_DOCS_URL_REGEX = /https:\/\/docs\.google\.com\/document(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/pub)/i;
+const GOOGLE_WORKSPACE_URL_REGEX = /https:\/\/docs\.google\.com\/(document|presentation|spreadsheets)(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/(?:pub|pubhtml))/i;
+const MARKDOWN_IMAGE_LINK_REGEX = /!\[([^\]]*)\]\((<[^>\n]+>|[^)\s]+)(?:\s+"([^"]*)")?\)/g;
+const DATA_URI_IMAGE_REF_REGEX = /^\[([^\]]+)\]:\s*<?(data:image\/([a-zA-Z+]+);base64,([^\s>]+))>?[ \t]*$/gm;
+const HTML_IMG_TAG_REGEX = /<img\b[^>]*>/gi;
+const HTML_IMG_SRC_ATTRIBUTE_REGEX = /\bsrc\s*=\s*(["'])(.*?)\1/i;
 export function hashString(value) {
     let hash = 2166136261;
     for (let i = 0; i < value.length; i++) {
@@ -98,6 +102,236 @@ function extensionFromMime(mimeType) {
         "image/tiff": "tiff",
     };
     return (_a = mimeMap[mimeType.toLowerCase()]) !== null && _a !== void 0 ? _a : "png";
+}
+function decodeBase64ToArrayBuffer(base64) {
+    const binaryString = atob(base64.replace(/\s+/g, ""));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+function toNoteRelativePath(vaultPath, noteFolderPath) {
+    const normalizedNoteFolderPath = normalizePath(noteFolderPath);
+    const prefix = `${normalizedNoteFolderPath}/`;
+    return vaultPath.startsWith(prefix) ? vaultPath.slice(prefix.length) : vaultPath;
+}
+function saveDataUriImageToVault(base64Data_1, mimeSubtype_1, label_1, vault_1, folderPath_1) {
+    return __awaiter(this, arguments, void 0, function* (base64Data, mimeSubtype, label, vault, folderPath, preferPlainLabel = false, debug = false) {
+        const mimeType = `image/${mimeSubtype}`;
+        const extension = extensionFromMime(mimeType);
+        const safeName = sanitizeFileName(label || "image");
+        const fileHash = hashString(base64Data.slice(0, 64));
+        const fileName = preferPlainLabel ? `${safeName}.${extension}` : `${safeName}-${fileHash}.${extension}`;
+        const filePath = normalizePath(`${folderPath}/${fileName}`);
+        try {
+            if (!vault.getAbstractFileByPath(filePath)) {
+                const data = decodeBase64ToArrayBuffer(base64Data);
+                yield vault.createBinary(filePath, data);
+                if (debug) {
+                    console.debug("[I link therefore iframe] Saved data URI image to vault:", filePath);
+                }
+            }
+            return filePath;
+        }
+        catch (error) {
+            if (debug) {
+                console.error("[I link therefore iframe] Failed to save data URI image to vault:", error);
+            }
+            return null;
+        }
+    });
+}
+function localizeMarkdownImageLinks(markdown_1, vault_1, noteFolderPath_1, assetsFolderPath_1) {
+    return __awaiter(this, arguments, void 0, function* (markdown, vault, noteFolderPath, assetsFolderPath, debug = false) {
+        const matches = Array.from(markdown.matchAll(MARKDOWN_IMAGE_LINK_REGEX));
+        if (matches.length === 0)
+            return markdown;
+        const cache = new Map();
+        let output = "";
+        let lastIndex = 0;
+        let localizedCount = 0;
+        for (const match of matches) {
+            var _a, _b, _c;
+            const start = (_a = match.index) !== null && _a !== void 0 ? _a : 0;
+            const end = start + match[0].length;
+            output += markdown.slice(lastIndex, start);
+            const altText = (_b = match[1]) !== null && _b !== void 0 ? _b : "";
+            const rawUrl = (_c = match[2]) !== null && _c !== void 0 ? _c : "";
+            const title = match[3];
+            const originalLink = match[0];
+            const normalizedUrl = rawUrl.replace(/^<|>$/g, "").trim();
+            if (!normalizedUrl) {
+                output += originalLink;
+                lastIndex = end;
+                continue;
+            }
+            if (normalizedUrl.startsWith("data:")) {
+                const m = normalizedUrl.match(/^data:image\/([a-zA-Z+]+);base64,([A-Za-z0-9+/=]+)$/);
+                if (m) {
+                    yield ensureFolderExists(vault, assetsFolderPath);
+                    const cacheKey = `data:${m[2].slice(0, 40)}`;
+                    let localPath = cache.get(cacheKey);
+                    if (!localPath) {
+                        const saved = yield saveDataUriImageToVault(m[2], m[1], altText || "image", vault, assetsFolderPath, false, debug);
+                        if (saved) {
+                            localPath = saved;
+                            cache.set(cacheKey, localPath);
+                        }
+                    }
+                    if (localPath) {
+                        const noteRelativePath = toNoteRelativePath(localPath, noteFolderPath);
+                        const titleSegment = title ? ` "${title}"` : "";
+                        output += `![${altText}](<${noteRelativePath}>${titleSegment})`;
+                        lastIndex = end;
+                        localizedCount += 1;
+                        continue;
+                    }
+                }
+                output += originalLink;
+                lastIndex = end;
+                continue;
+            }
+            if (!isURL(normalizedUrl)) {
+                output += originalLink;
+                lastIndex = end;
+                continue;
+            }
+            let localPath = cache.get(normalizedUrl);
+            if (localPath === undefined) {
+                localPath = yield saveImageUrlToVault(normalizedUrl, vault, assetsFolderPath, debug);
+                cache.set(normalizedUrl, localPath);
+            }
+            if (!localPath || localPath === normalizedUrl) {
+                output += originalLink;
+                lastIndex = end;
+                continue;
+            }
+            const noteRelativePath = toNoteRelativePath(localPath, noteFolderPath);
+            const titleSegment = title ? ` "${title}"` : "";
+            output += `![${altText}](<${noteRelativePath}>${titleSegment})`;
+            lastIndex = end;
+            localizedCount += 1;
+        }
+        output += markdown.slice(lastIndex);
+        if (debug && localizedCount > 0) {
+            console.debug("[I link therefore iframe] Localized markdown image links:", localizedCount);
+        }
+        return output;
+    });
+}
+function localizeHtmlImageTagSources(markdown_1, vault_1, noteFolderPath_1, assetsFolderPath_1) {
+    return __awaiter(this, arguments, void 0, function* (markdown, vault, noteFolderPath, assetsFolderPath, debug = false) {
+        const matches = Array.from(markdown.matchAll(HTML_IMG_TAG_REGEX));
+        if (matches.length === 0)
+            return markdown;
+        const cache = new Map();
+        let output = "";
+        let lastIndex = 0;
+        let localizedCount = 0;
+        for (const match of matches) {
+            var _a;
+            const start = (_a = match.index) !== null && _a !== void 0 ? _a : 0;
+            const end = start + match[0].length;
+            output += markdown.slice(lastIndex, start);
+            const originalTag = match[0];
+            const srcMatch = originalTag.match(HTML_IMG_SRC_ATTRIBUTE_REGEX);
+            if (!(srcMatch === null || srcMatch === void 0 ? void 0 : srcMatch[2])) {
+                output += originalTag;
+                lastIndex = end;
+                continue;
+            }
+            const normalizedUrl = srcMatch[2].replace(/^<|>$/g, "").trim();
+            if (!normalizedUrl || normalizedUrl.startsWith("data:") || !isURL(normalizedUrl)) {
+                output += originalTag;
+                lastIndex = end;
+                continue;
+            }
+            let localPath = cache.get(normalizedUrl);
+            if (localPath === undefined) {
+                localPath = yield saveImageUrlToVault(normalizedUrl, vault, assetsFolderPath, debug);
+                cache.set(normalizedUrl, localPath);
+            }
+            if (!localPath || localPath === normalizedUrl) {
+                output += originalTag;
+                lastIndex = end;
+                continue;
+            }
+            const noteRelativePath = toNoteRelativePath(localPath, noteFolderPath);
+            const quote = srcMatch[1];
+            const updatedTag = originalTag.replace(HTML_IMG_SRC_ATTRIBUTE_REGEX, `src=${quote}${noteRelativePath}${quote}`);
+            output += updatedTag;
+            lastIndex = end;
+            localizedCount += 1;
+        }
+        output += markdown.slice(lastIndex);
+        if (debug && localizedCount > 0) {
+            console.debug("[I link therefore iframe] Localized HTML image tags:", localizedCount);
+        }
+        return output;
+    });
+}
+function localizeDataUriImageRefs(markdown_1, vault_1, noteFolderPath_1, assetsFolderPath_1) {
+    return __awaiter(this, arguments, void 0, function* (markdown, vault, noteFolderPath, assetsFolderPath, debug = false) {
+        const matches = Array.from(markdown.matchAll(DATA_URI_IMAGE_REF_REGEX));
+        if (matches.length === 0)
+            return markdown;
+        yield ensureFolderExists(vault, assetsFolderPath);
+        let output = markdown;
+        let savedCount = 0;
+        const labelToPath = new Map();
+        for (let i = matches.length - 1; i >= 0; i--) {
+            var _a;
+            const match = matches[i];
+            const label = match[1];
+            const mimeSubtype = match[3];
+            const base64Data = match[4];
+            const start = (_a = match.index) !== null && _a !== void 0 ? _a : 0;
+            const end = start + match[0].length;
+            const localPath = yield saveDataUriImageToVault(base64Data, mimeSubtype, label, vault, assetsFolderPath, true, debug);
+            if (!localPath)
+                continue;
+            const noteRelativePath = toNoteRelativePath(localPath, noteFolderPath);
+            const lineStart = output.lastIndexOf("\n", start - 1) + 1;
+            const lineEndIndex = output.indexOf("\n", end);
+            const lineEnd = lineEndIndex === -1 ? output.length : lineEndIndex + 1;
+            output = output.slice(0, lineStart) + output.slice(lineEnd);
+            labelToPath.set(label, noteRelativePath);
+            savedCount += 1;
+        }
+        if (labelToPath.size > 0) {
+            output = output.replace(/!\[([^\]]*)\]\[([^\]]+)\]/g, (fullMatch, altText, label) => {
+                const targetPath = labelToPath.get(label);
+                if (!targetPath)
+                    return fullMatch;
+                return `![${altText}](<${targetPath}>)`;
+            });
+            output = output.replace(/\n{3,}/g, "\n\n");
+        }
+        if (debug && savedCount > 0) {
+            console.debug("[I link therefore iframe] Localized data URI image references:", savedCount);
+        }
+        return output;
+    });
+}
+function parseContentDispositionFileName(contentDisposition) {
+    var _a, _b;
+    if (!contentDisposition)
+        return null;
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if ((_a = utf8Match === null || utf8Match === void 0 ? void 0 : utf8Match[1]) !== null && _a !== void 0 ? _a : false) {
+        try {
+            return decodeURIComponent(utf8Match[1]).replace(/^\"|\"$/g, "");
+        }
+        catch (_c) {
+            return utf8Match[1].replace(/^\"|\"$/g, "");
+        }
+    }
+    const simpleMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i);
+    if ((_b = simpleMatch === null || simpleMatch === void 0 ? void 0 : simpleMatch[1]) !== null && _b !== void 0 ? _b : false) {
+        return simpleMatch[1];
+    }
+    return null;
 }
 function fileInfoFromUrl(url, fallbackExtension) {
     const parsed = new URL(url);
@@ -538,42 +772,82 @@ export function resolveAllSocialMediaImageUrls(url_1) {
 }
 export function saveGoogleDocToVault(url_1, vault_1, folderPath_1) {
     return __awaiter(this, arguments, void 0, function* (url, vault, folderPath, debug = false) {
-        var _a, _b;
-        const match = url.match(GOOGLE_DOCS_URL_REGEX);
-        if (!match || !match[1])
+        var _a, _b, _c, _d;
+        const workspaceMatch = url.match(GOOGLE_WORKSPACE_URL_REGEX);
+        if (!((_a = workspaceMatch === null || workspaceMatch === void 0 ? void 0 : workspaceMatch[1]) !== null && _a !== void 0 ? _a : false) || !((_b = workspaceMatch === null || workspaceMatch === void 0 ? void 0 : workspaceMatch[2]) !== null && _b !== void 0 ? _b : false))
             return;
-        const documentId = match[1];
-        const exportUrl = `https://docs.google.com/document/d/${documentId}/export?format=md`;
+        const resourceType = workspaceMatch[1];
+        const resourceId = workspaceMatch[2];
+        yield ensureFolderExists(vault, folderPath);
+        if (resourceType === "document") {
+            const exportUrl = `https://docs.google.com/document/d/${resourceId}/export?format=md`;
+            try {
+                const response = yield requestUrl({ url: exportUrl, method: "GET" });
+                const contentType = (_c = response.headers["content-type"]) !== null && _c !== void 0 ? _c : "";
+                // If the response is HTML the document is private or inaccessible.
+                if (contentType.startsWith("text/html")) {
+                    if (debug) {
+                        console.debug("[I link therefore iframe] Google Doc is not publicly accessible, skipping download:", url);
+                    }
+                    return;
+                }
+                const content = response.text;
+                if (!content)
+                    return;
+                // Use the first heading as the filename, falling back to a sortable short-id label.
+                const titleMatch = content.match(/^#\s+(.+)/m);
+                const title = ((_d = titleMatch === null || titleMatch === void 0 ? void 0 : titleMatch[1]) === null || _d === void 0 ? void 0 : _d.trim()) || `google-doc-${resourceId.slice(0, 8)}`;
+                const fileName = `${sanitizeFileName(title)}.md`;
+                const assetsFolderPath = normalizePath(`${folderPath}/${sanitizeFileName(title)}-assets`);
+                const step1 = yield localizeDataUriImageRefs(content, vault, folderPath, assetsFolderPath, debug);
+                const step2 = yield localizeMarkdownImageLinks(step1, vault, folderPath, assetsFolderPath, debug);
+                const localizedContent = yield localizeHtmlImageTagSources(step2, vault, folderPath, assetsFolderPath, debug);
+                const filePath = normalizePath(`${folderPath}/${fileName}`);
+                if (!vault.getAbstractFileByPath(filePath)) {
+                    yield vault.create(filePath, localizedContent);
+                    if (debug) {
+                        console.debug("[I link therefore iframe] Saved Google Doc to vault:", filePath);
+                    }
+                }
+            }
+            catch (error) {
+                if (debug) {
+                    console.error("[I link therefore iframe] Failed to save Google Doc to vault:", error);
+                }
+            }
+            return;
+        }
+        if (resourceType !== "presentation" && resourceType !== "spreadsheets")
+            return;
+        const exportUrl = `https://docs.google.com/${resourceType}/d/${resourceId}/export/pdf`;
+        const readableType = resourceType === "presentation" ? "Google Slides" : "Google Sheets";
         try {
             const response = yield requestUrl({ url: exportUrl, method: "GET" });
-            const contentType = (_a = response.headers["content-type"]) !== null && _a !== void 0 ? _a : "";
-            // If the response is HTML the document is private or inaccessible.
+            const contentType = response.headers["content-type"] || "";
+            // If the response is HTML the file is private or inaccessible.
             if (contentType.startsWith("text/html")) {
                 if (debug) {
-                    console.debug("[I link therefore iframe] Google Doc is not publicly accessible, skipping download:", url);
+                    console.debug(`[I link therefore iframe] ${readableType} file is not publicly accessible, skipping download:`, url);
                 }
                 return;
             }
-            const content = response.text;
-            if (!content)
-                return;
-            // Use the first heading as the filename, falling back to a sortable short-id label.
-            const titleMatch = content.match(/^#\s+(.+)/m);
-            const title = ((_b = titleMatch === null || titleMatch === void 0 ? void 0 : titleMatch[1]) === null || _b === void 0 ? void 0 : _b.trim()) || `google-doc-${documentId.slice(0, 8)}`;
-            const fileHash = hashString(documentId);
-            const fileName = `${sanitizeFileName(title)}-${fileHash}.md`;
-            yield ensureFolderExists(vault, folderPath);
+            const contentDisposition = response.headers["content-disposition"] || "";
+            const dispositionName = parseContentDispositionFileName(contentDisposition) || "";
+            const titleFromDisposition = dispositionName.replace(/\.pdf$/i, "");
+            const fallbackPrefix = resourceType === "presentation" ? "google-slide" : "google-sheet";
+            const title = titleFromDisposition || `${fallbackPrefix}-${resourceId.slice(0, 8)}`;
+            const fileName = `${sanitizeFileName(title)}.pdf`;
             const filePath = normalizePath(`${folderPath}/${fileName}`);
             if (!vault.getAbstractFileByPath(filePath)) {
-                yield vault.create(filePath, content);
+                yield vault.createBinary(filePath, response.arrayBuffer);
                 if (debug) {
-                    console.debug("[I link therefore iframe] Saved Google Doc to vault:", filePath);
+                    console.debug(`[I link therefore iframe] Saved ${readableType} PDF to vault:`, filePath);
                 }
             }
         }
         catch (error) {
             if (debug) {
-                console.error("[I link therefore iframe] Failed to save Google Doc to vault:", error);
+                console.error(`[I link therefore iframe] Failed to save ${readableType} PDF to vault:`, error);
             }
         }
     });

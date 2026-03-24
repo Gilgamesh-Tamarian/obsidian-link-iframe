@@ -21,7 +21,7 @@ Adds an Open original link footer below generated embeds. This does not change t
 
 ## Download and storage
 
-These settings appear directly in the main settings list (not inside a collapsible section). They allow you to store certain media from embedded URLs locally, which can impact performance and vault size.
+These settings allow you to store certain media from embedded URLs locally, which can impact performance and vault size.
 
 ### Save image embeds to vault
 Downloads direct image URLs to your vault and replaces links with local files.
@@ -45,11 +45,25 @@ Currently supported for this extraction flow:
 - Steam
 
 ### Save Google Docs to vault
-When embedding a Google Doc, attempts to download a Markdown copy into your vault.
+These settings are grouped in the **Google Docs** collapsible section and cover Google Docs, Slides, and Spreadsheets links from `docs.google.com`.
+
+When enabled:
+
+- Google Docs are downloaded as Markdown (`.md`).
+- Google Slides are downloaded as PDF (`.pdf`) or PPTX (`.pptx`) based on your format setting.
+- Google Spreadsheets are downloaded as PDF (`.pdf`) or XLSX (`.xlsx`) based on your format setting.
 
 Important:
 
-- The Google Doc must be shared so it can be accessed by link.
+- The source file must be shared so it can be accessed by link.
+
+### Refresh saved Google Docs
+Re-downloads previously saved Google Docs by reading `google-docs-source` from note frontmatter.
+
+Limitations:
+
+- This refresh currently only applies to Google Docs notes.
+- It does not bulk refresh saved Google Slides or Spreadsheets exports.
 
 ### Image folder path
 Target folder inside your vault for downloaded image files. Case sensitive.
@@ -57,7 +71,7 @@ Target folder inside your vault for downloaded image files. Case sensitive.
 Default: linked-iframe-images
 
 ### Google Docs folder path
-Target folder inside your vault for downloaded Google Docs Markdown files. Case sensitive.
+Target folder inside your vault for downloaded Google Docs Markdown files and Google Slides/Spreadsheets exports. Case sensitive.
 
 Default: linked-iframe-docs
 

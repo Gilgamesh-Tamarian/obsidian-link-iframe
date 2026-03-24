@@ -1,6 +1,6 @@
 import { __awaiter } from "tslib";
 import { hasProvider, extract } from 'oembed-parser';
-import * as DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify';
 const buildDefaultIframe = (url) => {
     return `<iframe src="${url}" allow="fullscreen" allowfullscreen style="height:100%;width:100%; aspect-ratio: 16 / 9; "></iframe>`;
 };

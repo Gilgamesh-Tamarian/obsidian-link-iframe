@@ -60,7 +60,6 @@ const SOUNDCLOUD_URL_REGEX = /^https:\/\/(?:www\.)?soundcloud\.com\//i;
 const SPOTIFY_URL_REGEX = /^https:\/\/(?:open|play|www)\.spotify\.com\//i;
 const CODEPEN_URL_REGEX = /^https:\/\/codepen\.io\//i;
 const STEAM_APP_URL_REGEX = /store\.steampowered\.com\/app\/(\d+)/i;
-const GOOGLE_DOCS_URL_REGEX = /https:\/\/docs\.google\.com\/document(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/pub)/i;
 
 export function hashString(value: string): string {
     let hash = 2166136261;
@@ -733,53 +732,4 @@ export async function resolveAllSocialMediaImageUrls(
 
     return [];
 }
-
-    export async function saveGoogleDocToVault(
-        url: string,
-        vault: Vault,
-        folderPath: string,
-        debug = false,
-    ): Promise<void> {
-        const match = url.match(GOOGLE_DOCS_URL_REGEX);
-        if (!match || !match[1]) return;
-
-        const documentId = match[1];
-        const exportUrl = `https://docs.google.com/document/d/${documentId}/export?format=md`;
-
-        try {
-            const response = await requestUrl({ url: exportUrl, method: "GET" });
-            const contentType = response.headers["content-type"] ?? "";
-
-            // If the response is HTML the document is private or inaccessible.
-            if (contentType.startsWith("text/html")) {
-                if (debug) {
-                    console.debug("[I link therefore iframe] Google Doc is not publicly accessible, skipping download:", url);
-                }
-                return;
-            }
-
-            const content = response.text;
-            if (!content) return;
-
-            // Use the first heading as the filename, falling back to a sortable short-id label.
-            const titleMatch = content.match(/^#\s+(.+)/m);
-            const title = titleMatch?.[1]?.trim() || `google-doc-${documentId.slice(0, 8)}`;
-            const fileHash = hashString(documentId);
-            const fileName = `${sanitizeFileName(title)}-${fileHash}.md`;
-
-            await ensureFolderExists(vault, folderPath);
-            const filePath = normalizePath(`${folderPath}/${fileName}`);
-
-            if (!vault.getAbstractFileByPath(filePath)) {
-                await vault.create(filePath, content);
-                if (debug) {
-                    console.debug("[I link therefore iframe] Saved Google Doc to vault:", filePath);
-                }
-            }
-        } catch (error) {
-            if (debug) {
-                console.error("[I link therefore iframe] Failed to save Google Doc to vault:", error);
-            }
-        }
-    }
 

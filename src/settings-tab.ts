@@ -53,6 +53,8 @@ export interface PluginSettings {
     imageFolderPath: string;
     googleDocsFolderPath: string;
     saveGoogleDocsToVault: boolean;
+    googleSlidesFormat: "pdf" | "pptx";
+    googleSheetsFormat: "pdf" | "xlsx";
     saveQuizletCardsToVault: boolean;
     saveQuizletImagesToVault: boolean;
     saveQuizletAsSeparateNotes: boolean;
@@ -72,6 +74,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     imageFolderPath: "linked-iframe-images",
     googleDocsFolderPath: "linked-iframe-docs",
     saveGoogleDocsToVault: false,
+    googleSlidesFormat: "pdf",
+    googleSheetsFormat: "pdf",
     saveQuizletCardsToVault: false,
     saveQuizletImagesToVault: false,
     saveQuizletAsSeparateNotes: false,
@@ -232,18 +236,6 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
-            .setName("Save google docs to vault")
-            .setDesc("Download a local Markdown copy of the document when embedding a google doc (requires the document to be shared with anyone with the link)")
-            .addToggle(toggle => toggle
-                .setValue(settings.saveGoogleDocsToVault)
-                .onChange(async value => {
-
-                    settings.saveGoogleDocsToVault = value;
-                    await plugin.saveSettings();
-
-                }));
-
-        new Setting(containerEl)
             .setName("Image folder path")
             .setDesc("Folder inside your vault used for downloaded image content")
             .addText(text => text
@@ -256,9 +248,92 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
                 }));
 
-        new Setting(containerEl)
+        addVisualDivider(containerEl);
+
+        // ── Google Docs settings (collapsible) ───────────────────────────────
+
+        const googleDocsContent = createCollapsibleSection(
+            "Google Docs",
+            "Configure Google Docs/Slides/Sheets downloads and Google Docs refresh behavior"
+        );
+
+        new Setting(googleDocsContent)
+            .setName("Save google docs/slides/spreadsheets to vault")
+            .setDesc("Download a local copy of the document when embedding from google workspace. Docs will be saved as Markdown, slides/sheets in chosen format.")
+            .addToggle(toggle => toggle
+                .setValue(settings.saveGoogleDocsToVault)
+                .onChange(async value => {
+
+                    settings.saveGoogleDocsToVault = value;
+                    await plugin.saveSettings();
+
+                }));
+
+        new Setting(googleDocsContent)
+            .setName("Google slides export format")
+            .setDesc("Choose file format when exporting google slides")
+            .addDropdown(dropdown => dropdown
+                .addOption("pdf", "PDF (default)")
+                .addOption("pptx", "Pptx (PowerPoint)")
+                .setValue(settings.googleSlidesFormat)
+                .onChange(async value => {
+                    settings.googleSlidesFormat = value as "pdf" | "pptx";
+                    await plugin.saveSettings();
+                }));
+
+        new Setting(googleDocsContent)
+            .setName("Google sheets export format")
+            .setDesc("Choose file format when exporting google sheets")
+            .addDropdown(dropdown => dropdown
+                .addOption("pdf", "PDF (default)")
+                .addOption("xlsx", "Xlsx (excel)")
+                .setValue(settings.googleSheetsFormat)
+                .onChange(async value => {
+                    settings.googleSheetsFormat = value as "pdf" | "xlsx";
+                    await plugin.saveSettings();
+                }));
+
+        new Setting(googleDocsContent)
+            .setName("Refresh saved google docs")
+            .setDesc("Re-download all previously saved google docs from the google-docs-source property in each note.\nDoes not work for slides/spreadsheets.")
+            .addButton(button => {
+                let isUpdating = false;
+
+                button
+                    .setButtonText("Refresh docs")
+                    .setCta()
+                    .onClick(async () => {
+                        if (isUpdating) return;
+
+                        isUpdating = true;
+                        button.setDisabled(true);
+                        button.setButtonText("Refreshing...");
+                        new Notice("I link therefore iframe: refreshing saved google docs...");
+
+                        try {
+                            const result = await plugin.updateAllGoogleDocs();
+                            if (result.total === 0) {
+                                new Notice("I link therefore iframe: no saved google docs found. Embed and save a google doc first.", 8000);
+                            } else {
+                                new Notice(
+                                    `I link therefore iframe: refreshed Google Docs ` +
+                                    `(${result.updated}/${result.total} updated, ${result.errors} errors).`,
+                                    8000,
+                                );
+                            }
+                        } catch {
+                            new Notice("I link therefore iframe: failed to refresh google docs.");
+                        } finally {
+                            isUpdating = false;
+                            button.setDisabled(false);
+                            button.setButtonText("Refresh docs");
+                        }
+                    });
+            });
+
+        new Setting(googleDocsContent)
             .setName("Google docs folder path")
-            .setDesc("Folder inside your vault used for downloaded google docs Markdown files")
+            .setDesc("Folder inside your vault used for downloaded google docs Markdown files and google slides/spreadsheets exports")
             .addText(text => text
                 .setPlaceholder("Linked-iframe-docs")
                 .setValue(settings.googleDocsFolderPath)
@@ -269,7 +344,6 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
                 }));
 
-        addVisualDivider(containerEl);
 
         // ── Quizlet settings (collapsible) ────────────────────────────────────
 

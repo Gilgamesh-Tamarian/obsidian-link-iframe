@@ -1,7 +1,7 @@
 import { SupportedWebsites } from "src/settings-tab";
 import { EmbedBase } from "./embedBase";
 
-// Sites in this file: CodePen, Google Docs, Google Drive.
+// Sites in this file: CodePen, Google Workspace (Docs/Slides/Sheets), Google Drive.
 
 export class CodepenEmbed extends EmbedBase {
     name: SupportedWebsites = "CodePen";
@@ -21,18 +21,19 @@ export class CodepenEmbed extends EmbedBase {
 
 export class GoogleDocsEmbed extends EmbedBase {
     name: SupportedWebsites = "Google Docs";
-    // Matches standard and user-scoped Docs URLs, but NOT published pages —
-    // /d/e/ is the published-document key prefix, and /pub marks a published view.
+    // Matches standard and user-scoped Docs/Slides/Sheets URLs, but NOT published pages —
+    // /d/e/ is the published key prefix, and /pub(/html) marks a published view.
     // Both are treated as regular websites by the generic iframe fallback.
-    regex = new RegExp(/https:\/\/docs\.google\.com\/document(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/pub)/i);
+    regex = new RegExp(/https:\/\/docs\.google\.com\/(document|presentation|spreadsheets)(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/(?:pub|pubhtml))/i);
 
     createEmbed(url: string): HTMLElement {
         const regexMatch = url.match(this.regex);
         if (regexMatch === null)
             return this.onErrorCreatingEmbed(url);
 
-        const documentId = regexMatch[1];
-        const src = `https://docs.google.com/document/d/${documentId}/preview`;
+        const resourceType = regexMatch[1];
+        const resourceId = regexMatch[2];
+        const src = `https://docs.google.com/${resourceType}/d/${resourceId}/preview`;
 
         return this.createEmbedIframe({
             src,

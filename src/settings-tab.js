@@ -153,8 +153,8 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
             yield plugin.saveSettings();
         })));
         new Setting(containerEl)
-            .setName("Save Google Docs to vault")
-            .setDesc("Download a local Markdown copy of the document when embedding a Google Doc (requires the document to be shared with anyone with the link)")
+            .setName("Save google docs/slides to vault")
+            .setDesc("Download a local copy of the document when embedding from google docs. Docs will be saved as Markdown, slides as PDF.")
             .addToggle(toggle => toggle
             .setValue(settings.saveGoogleDocsToVault)
             .onChange((value) => __awaiter(this, void 0, void 0, function* () {

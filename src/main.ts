@@ -5,8 +5,8 @@ import {
 	isURL,
 	resolveAllSocialMediaImageUrls,
 	saveImageUrlToVault,
-	saveGoogleDocToVault,
 } from 'src/utility';
+import { GoogleDocsUpdateResult, saveGoogleDocToVault, updateAllGoogleDocs } from 'src/utils/google_docs.utils';
 import { QuizletBulkUpdateResult, saveQuizletSetToVault, updateAllQuizletSetsFromStoredSources } from 'src/utils/quizlet.utils';
 import { EmbedManager } from './embeds/embedManager';
 import { getIframe } from './utils/iframe_generator.utils';
@@ -133,6 +133,14 @@ export default class AutoEmbedPlugin extends Plugin {
 		);
 	}
 
+	async updateAllGoogleDocs(): Promise<GoogleDocsUpdateResult> {
+		return await updateAllGoogleDocs(
+			this.app.vault,
+			this.settings.googleDocsFolderPath,
+			this.settings.debug,
+		);
+	}
+
 	private getSelection(editor: Editor): Selection | null {
 
 		if (!editor.somethingSelected())
@@ -236,6 +244,8 @@ export default class AutoEmbedPlugin extends Plugin {
 				originalUrl,
 				this.app.vault,
 				this.settings.googleDocsFolderPath,
+				this.settings.googleSlidesFormat,
+				this.settings.googleSheetsFormat,
 				this.settings.debug,
 			);
 		}
