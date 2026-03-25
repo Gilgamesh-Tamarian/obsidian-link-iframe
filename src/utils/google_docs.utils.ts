@@ -359,8 +359,8 @@ export async function saveGoogleDocToVault(
     vault: Vault,
     fileManager: FileManager,
     folderPath: string,
-    slidesFormat: "pdf" | "pptx" = "pdf",
-    sheetsFormat: "pdf" | "xlsx" = "pdf",
+    slidesFormat: "pdf" | "pptx" | "odp" = "pdf",
+    sheetsFormat: "pdf" | "xlsx" | "ods" = "pdf",
     forceOverwrite = false,
     debug = false,
 ): Promise<void> {
@@ -435,12 +435,12 @@ export async function saveGoogleDocToVault(
     const isPresentation = resourceType === "presentation";
     const format = isPresentation ? slidesFormat : sheetsFormat;
     const exportFormat = isPresentation
-        ? (format === "pptx" ? "pptx" : "pdf")
-        : (format === "xlsx" ? "xlsx" : "pdf");
+        ? (format === "pptx" ? "pptx" : format === "odp" ? "odp" : "pdf")
+        : (format === "xlsx" ? "xlsx" : format === "ods" ? "ods" : "pdf");
 
     const exportUrl = `https://docs.google.com/${resourceType}/d/${resourceId}/export?format=${exportFormat}`;
     const readableType = isPresentation ? "Google Slides" : "Google Sheets";
-    const fileExtension = exportFormat === "xlsx" ? "xlsx" : exportFormat === "pptx" ? "pptx" : "pdf";
+    const fileExtension = exportFormat;
 
     try {
         const response = await requestUrl({ url: exportUrl, method: "GET" });

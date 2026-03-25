@@ -53,8 +53,8 @@ export interface PluginSettings {
     imageFolderPath: string;
     googleDocsFolderPath: string;
     saveGoogleDocsToVault: boolean;
-    googleSlidesFormat: "pdf" | "pptx";
-    googleSheetsFormat: "pdf" | "xlsx";
+    googleSlidesFormat: "pdf" | "pptx" | "odp";
+    googleSheetsFormat: "pdf" | "xlsx" | "ods";
     saveQuizletCardsToVault: boolean;
     saveQuizletImagesToVault: boolean;
     saveQuizletAsSeparateNotes: boolean;
@@ -275,9 +275,10 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
             .addDropdown(dropdown => dropdown
                 .addOption("pdf", "PDF (default)")
                 .addOption("pptx", "Pptx (powerpoint)")
+                .addOption("odp", "Odp (opendocument presentation)")
                 .setValue(settings.googleSlidesFormat)
                 .onChange(async value => {
-                    settings.googleSlidesFormat = value as "pdf" | "pptx";
+                    settings.googleSlidesFormat = value as "pdf" | "pptx" | "odp";
                     await plugin.saveSettings();
                 }));
 
@@ -287,9 +288,10 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
             .addDropdown(dropdown => dropdown
                 .addOption("pdf", "PDF (default)")
                 .addOption("xlsx", "Xlsx (excel)")
+                .addOption("ods", "Ods (opendocument spreadsheet)")
                 .setValue(settings.googleSheetsFormat)
                 .onChange(async value => {
-                    settings.googleSheetsFormat = value as "pdf" | "xlsx";
+                    settings.googleSheetsFormat = value as "pdf" | "xlsx" | "ods";
                     await plugin.saveSettings();
                 }));
 
