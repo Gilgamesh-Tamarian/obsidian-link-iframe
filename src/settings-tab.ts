@@ -274,7 +274,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
             .setDesc("Choose file format when exporting google slides")
             .addDropdown(dropdown => dropdown
                 .addOption("pdf", "PDF (default)")
-                .addOption("pptx", "Pptx (PowerPoint)")
+                .addOption("pptx", "Pptx (powerpoint)")
                 .setValue(settings.googleSlidesFormat)
                 .onChange(async value => {
                     settings.googleSlidesFormat = value as "pdf" | "pptx";

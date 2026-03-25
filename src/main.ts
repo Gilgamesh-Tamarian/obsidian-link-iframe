@@ -136,6 +136,7 @@ export default class AutoEmbedPlugin extends Plugin {
 	async updateAllGoogleDocs(): Promise<GoogleDocsUpdateResult> {
 		return await updateAllGoogleDocs(
 			this.app.vault,
+			this.app.fileManager,
 			this.settings.googleDocsFolderPath,
 			this.settings.debug,
 		);
@@ -243,9 +244,11 @@ export default class AutoEmbedPlugin extends Plugin {
 			await saveGoogleDocToVault(
 				originalUrl,
 				this.app.vault,
+				this.app.fileManager,
 				this.settings.googleDocsFolderPath,
 				this.settings.googleSlidesFormat,
 				this.settings.googleSheetsFormat,
+				false,
 				this.settings.debug,
 			);
 		}

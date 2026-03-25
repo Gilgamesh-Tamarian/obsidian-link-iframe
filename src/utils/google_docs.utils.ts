@@ -1,4 +1,4 @@
-import { normalizePath, requestUrl, Vault } from "obsidian";
+import { FileManager, normalizePath, requestUrl, Vault } from "obsidian";
 import { ensureFolderExists, hashString, isURL, sanitizeFileName, saveImageUrlToVault } from "src/utility";
 
 const GOOGLE_WORKSPACE_URL_REGEX = /https:\/\/docs\.google\.com\/(document|presentation|spreadsheets)(?:\/u\/\d+)?\/d\/(?!e\/)([A-Za-z0-9_-]+)(?!\/(?:pub|pubhtml))/i;
@@ -293,13 +293,13 @@ function parseContentDispositionFileName(contentDisposition: string): string | n
     const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
     if (utf8Match?.[1]) {
         try {
-            return decodeURIComponent(utf8Match[1]).replace(/^\"|\"$/g, "");
+            return decodeURIComponent(utf8Match[1]).replace(/^"|"$/g, "");
         } catch {
-            return utf8Match[1].replace(/^\"|\"$/g, "");
+            return utf8Match[1].replace(/^"|"$/g, "");
         }
     }
 
-    const simpleMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i);
+    const simpleMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
     if (simpleMatch?.[1]) {
         return simpleMatch[1];
     }
@@ -315,6 +315,7 @@ export interface GoogleDocsUpdateResult {
 
 export async function updateAllGoogleDocs(
     vault: Vault,
+    fileManager: FileManager,
     folderPath: string,
     debug = false,
 ): Promise<GoogleDocsUpdateResult> {
@@ -343,7 +344,7 @@ export async function updateAllGoogleDocs(
 
     for (const sourceUrl of uniqueUrls) {
         try {
-            await saveGoogleDocToVault(sourceUrl, vault, folderPath, "pdf", "pdf", true, debug);
+            await saveGoogleDocToVault(sourceUrl, vault, fileManager, folderPath, "pdf", "pdf", true, debug);
             updated++;
         } catch {
             errors++;
@@ -356,6 +357,7 @@ export async function updateAllGoogleDocs(
 export async function saveGoogleDocToVault(
     url: string,
     vault: Vault,
+    fileManager: FileManager,
     folderPath: string,
     slidesFormat: "pdf" | "pptx" = "pdf",
     sheetsFormat: "pdf" | "xlsx" = "pdf",
@@ -406,8 +408,8 @@ export async function saveGoogleDocToVault(
 
             if (existingDocFile) {
                 const existingAssetsFolder = vault.getAbstractFileByPath(assetsFolderPath);
-                if (existingAssetsFolder) await vault.delete(existingAssetsFolder, true);
-                await vault.delete(existingDocFile);
+                if (existingAssetsFolder) await fileManager.trashFile(existingAssetsFolder);
+                await fileManager.trashFile(existingDocFile);
             }
 
             const step1 = await localizeDataUriImageRefs(content, vault, folderPath, assetsFolderPath, debug);
@@ -462,7 +464,7 @@ export async function saveGoogleDocToVault(
 
         const existingBinaryFile = vault.getAbstractFileByPath(filePath);
         if (existingBinaryFile && !forceOverwrite) return;
-        if (existingBinaryFile) await vault.delete(existingBinaryFile);
+        if (existingBinaryFile) await fileManager.trashFile(existingBinaryFile);
 
         await vault.createBinary(filePath, response.arrayBuffer);
         if (debug) {
