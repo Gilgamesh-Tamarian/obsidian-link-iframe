@@ -260,8 +260,8 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
         );
 
         new Setting(googleDocsContent)
-            .setName("Save Google Docs/Slides/Spreadsheets to vault")
-            .setDesc("Download a local copy of the document when embedding from Google Workspace. Docs will be saved as markdown, slides/sheets in chosen format.")
+            .setName("Save google docs/slides/spreadsheets to vault")
+            .setDesc("Download a local copy of the document when embedding from google workspace. Docs will be saved as Markdown, slides/sheets in chosen format.")
             .addToggle(toggle => toggle
                 .setValue(settings.saveGoogleDocsToVault)
                 .onChange(async value => {
@@ -273,13 +273,13 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
 
         new Setting(googleDocsContent)
-            .setName("Google Docs export format")
-            .setDesc("Choose file format when exporting Google Docs. Only markdown (.md) supports image localization and refresh.")
+            .setName("Google docs export format")
+            .setDesc("Choose file format when exporting google docs. Only Markdown (.md) supports image localization and refresh.")
             .addDropdown(dropdown => dropdown
-                .addOption("md", "Markdown (.md, default)")
-                .addOption("pdf", "PDF (.pdf)")
-                .addOption("docx", "Word (.docx)")
-                .addOption("odt", "OpenDocument (.odt)")
+                .addOption("md", "Markdown (default)")
+                .addOption("pdf", "PDF")
+                .addOption("docx", "Docx (word)")
+                .addOption("odt", "Odt (opendocument text)")
                 .setValue(settings.googleDocsFormat)
                 .onChange(async value => {
                     settings.googleDocsFormat = value as "md" | "pdf" | "docx" | "odt";
@@ -287,8 +287,8 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(googleDocsContent)
-            .setName("Google Slides export format")
-            .setDesc("Choose file format when exporting Google Slides")
+            .setName("Google slides export format")
+            .setDesc("Choose file format when exporting google slides")
             .addDropdown(dropdown => dropdown
                 .addOption("pdf", "PDF (default)")
                 .addOption("pptx", "Pptx (powerpoint)")
@@ -300,8 +300,8 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(googleDocsContent)
-            .setName("Google Sheets export format")
-            .setDesc("Choose file format when exporting Google Sheets")
+            .setName("Google sheets export format")
+            .setDesc("Choose file format when exporting google sheets")
             .addDropdown(dropdown => dropdown
                 .addOption("pdf", "PDF (default)")
                 .addOption("xlsx", "Xlsx (excel)")
@@ -314,7 +314,7 @@ export class AutoEmbedSettingTab extends PluginSettingTab {
 
         new Setting(googleDocsContent)
             .setName("Refresh saved google docs")
-            .setDesc("Re-download all previously saved google docs from the google-docs-source property in each note.\nOnly works for docs saved as markdown.")
+            .setDesc("Re-download all previously saved google docs from the google-docs-source property in each note.\nWorks only for docs saved as arkdown.")
             .addButton(button => {
                 let isUpdating = false;
 
